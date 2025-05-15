@@ -1,0 +1,72 @@
+
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Subway Bus Runner - بازی اتوبوس</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Vazirmatn&display=swap');
+  body {
+    margin: 0; background: linear-gradient(to top, #00111a, #004466);
+    font-family: 'Vazirmatn', Tahoma, sans-serif;
+    user-select: none; overflow: hidden; color: #fff;
+  }
+  #container {
+    position: relative; width: 400px; margin: 40px auto;
+    border-radius: 12px; box-shadow: 0 0 20px #0008;
+    background: linear-gradient(to bottom, #003366, #001f33);
+  }
+  canvas {
+    display: block; border-radius: 12px; background: #005599;
+  }
+  #ui {
+    position: absolute; top: 10px; width: 100%; text-align: center; z-index: 20;
+  }
+  #score, #lives, #level, #shieldStatus {
+    display: inline-block; margin: 0 8px; font-size: 20px; font-weight: bold;
+    text-shadow: 1px 1px 3px #0008;
+  }
+  #startScreen, #gameOverScreen, #levelUpScreen {
+    position: absolute; top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.85);
+    color: #ffd700; font-size: 28px;
+    display: flex; flex-direction: column; justify-content: center; align-items: center;
+    border-radius: 12px; z-index: 50;
+  }
+  button {
+    font-family: 'Vazirmatn', Tahoma, sans-serif;
+    font-size: 22px; margin-top: 20px; padding: 10px 25px;
+    border-radius: 10px; border: none; background: #ffd700;
+    color: #00111a; cursor: pointer; font-weight: bold;
+    box-shadow: 0 0 10px #ffd700aa;
+  }
+  button:active { transform: scale(0.97); }
+  #controls {
+    position: absolute; bottom: 10px; width: 100%;
+    display: flex; justify-content: center; gap: 20px; z-index: 30;
+  }
+  .btn-control {
+    background: #0077cc; border-radius: 50%;
+    width: 60px; height: 60px; color: #fff;
+    font-size: 28px; text-align: center; line-height: 60px;
+    user-select: none; box-shadow: 0 0 10px #0099ff88;
+    cursor: pointer;
+  }
+  .btn-control:active { background: #005fa3; }
+  #levelUpScreen {
+    font-size: 32px;
+    animation: flash 1.5s ease-in-out 3;
+  }
+  @keyframes flash {
+    0%,100% {opacity:1;}
+    50% {opacity:0;}
+  }
+</style>
+</head>
+<body>
+<p style="text-align:center; direction:rtl; font-family:'Vazirmatn'; color:#fff; margin-top:10px;">برای اجرای کامل بازی، فایل را در مرورگر باز کن</p>
+<!-- بازی Subway Bus Runner ادامه دارد ... -->
+</body>
+</html>
