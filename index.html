@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Subway Bus Runner - بازی اتوبوس</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Vazirmatn&display=swap');
+    body {
+      margin: 0; background: linear-gradient(to top, #00111a, #004466);
+      font-family: 'Vazirmatn', Tahoma, sans-serif;
+      user-select: none; overflow: hidden; color: #fff;
+    }
+    #container {
+      position: relative; width: 400px; margin: 40px auto;
+      border-radius: 12px; box-shadow: 0 0 20px #0008;
+      background: linear-gradient(to bottom, #003366, #001f33);
+    }
+    canvas {
+      display: block; border-radius: 12px; background: #005599;
+    }
+    #ui {
+      position: absolute; top: 10px; width: 100%; text-align: center; z-index: 20;
+    }
+    #score, #lives, #level, #shieldStatus {
+      display: inline-block; margin: 0 8px; font-size: 20px; font-weight: bold;
+      text-shadow: 1px 1px 3px #0008;
+    }
+    #startScreen, #gameOverScreen, #levelUpScreen {
+      position: absolute; top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.85);
+      color: #ffd700; font-size: 28px;
+      display: flex; flex-direction: column; justify-content: center; align-items: center;
+      border-radius: 12px; z-index: 50;
+    }
+    button {
+      font-family: 'Vazirmatn', Tahoma, sans-serif;
+      font-size: 22px; margin-top: 20px; padding: 10px 25px;
+      border-radius: 10px; border: none; background: #ffd700;
+      color: #00111a; cursor: pointer; font-weight: bold;
+      box-shadow: 0 0 10px #ffd700aa;
+    }
+    button:active { transform: scale(0.97); }
+    #controls {
+      position: absolute; bottom: 10px; width: 100%;
+      display: flex; justify-content: center; gap: 20px; z-index: 30;
+    }
+    .btn-control {
+      background: #0077cc; border-radius: 50%;
+      width: 60px; height: 60px; color: #fff;
+      font-size: 28px; text-align: center; line-height: 60px;
+      user-select: none; box-shadow: 0 0 10px #0099ff88;
+      cursor: pointer;
+    }
+    .btn-control:active { background: #005fa3; }
+    #levelUpScreen {
+      font-size: 32px;
+      animation: flash 1.5s ease-in-out 3;
+    }
+    @keyframes flash {
+      0%,100% {opacity:1;}
+      50% {opacity:0;}
+    }
+  </style>
+</head>
+<body>
+<div id="container">
+  <canvas id="game" width="400" height="600"></canvas>
+  <div id="ui">
+    <span id="score">امتیاز: 0</span>
+    <span id="lives">جان: 3</span>
+    <span id="level">مرحله: 1</span>
+    <span id="shieldStatus" style="color:#00ffcc; font-weight:bold; display:none;">شیلد فعال</span>
+  </div>
+  <div id="startScreen">
+    <div>بازی Subway Bus Runner</div>
+    <div style="font-size:18px; margin-top:10px;">
+      جهت‌ها برای حرکت، پرش با ↑ یا لمس بالا<br>
+      جمع‌آوری سکه‌ها و اجتناب از موانع<br>
+      شیلد کمک می‌کنه جان کم نشه<br>
+      ۳ جان داری، مرحله‌ها سخت‌تر می‌شن
+    </div>
+    <button id="startBtn">شروع بازی</button>
+  </div>
+  <div id="gameOverScreen" style="display:none;">
+    <div>بازی تموم شد!</div>
+    <div id="finalScore" style="margin: 15px 0; font-size: 22px;"></div>
+    <button id="restartBtn">بازی دوباره</button>
+  </div>
+  <div id="levelUpScreen" style="display:none;">
+    مرحله جدید! سرعت بیشتر!
+  </div>
+  <div id="controls">
+    <div class="btn-control" id="leftBtn">&#8592;</div>
+    <div class="btn-control" id="jumpBtn">&#8593;</div>
+    <div class="btn-control" id="rightBtn">&#8594;</div>
+  </div>
+</div>
+<script>
+let canvas = document.getElementById("game");
+let ctx = canvas.getContext("2d");
+
+let bus = { x: 160, y: 500, width: 40, height: 40, lane: 1, jumping: false, jumpY: 0 };
+let score = 0;
+let lives = 3;
+let level = 1;
+let speed = 3;
+let coins = [];
+let obstacles = [];
+let lanes = [60, 160, 260];
+
+function drawBus() {
+  ctx.fillStyle = "#ffd700";
+  ctx.fillRect(bus.x, bus.y - bus.jumpY, bus.width, bus.height);
+}
+
+function drawCoin(coin) {
+  ctx.fillStyle = "#ff0";
+  ctx.beginPath();
+  ctx.arc(coin.x + 20, coin.y + 20, 12, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function drawObstacle(obs) {
+  ctx.fillStyle = "#f00";
+  ctx.fillRect(obs.x, obs.y, 40, 40);
+}
+
+function updateGame() {
+  ctx.clearRect(0, 0, 400, 600);
+  drawBus();
+
+  coins.forEach(c => {
+    c.y += speed;
+    drawCoin(c);
+  });
+
+  obstacles.forEach(o => {
+    o.y += speed;
+    drawObstacle(o);
+  });
+
+  coins = coins.filter(c => {
+    if (collision(c, bus)) {
+      score++;
+      document.getElementById("score").textContent = "امتیاز: " + score;
+      return false;
+    }
+    return c.y < 600;
+  });
+
+  obstacles = obstacles.filter(o => {
+    if (collision(o, bus)) {
+      lives--;
+      document.getElementById("lives").textContent = "جان: " + lives;
+      if (lives <= 0) endGame();
+      return false;
+    }
+    return o.y < 600;
+  });
+
+  if (score > 0 && score % 10 === 0) {
+    level++;
+    speed++;
+    document.getElementById("level").textContent = "مرحله: " + level;
+    document.getElementById("levelUpScreen").style.display = "flex";
+    setTimeout(() => document.getElementById("levelUpScreen").style.display = "none", 1500);
+    score++; // تا چندبار تکرار نشه
+  }
+
+  if (bus.jumping) {
+    bus.jumpY += 6;
+    if (bus.jumpY >= 60) bus.jumping = false;
+  } else if (bus.jumpY > 0) {
+    bus.jumpY -= 6;
+  }
+
+  requestAnimationFrame(updateGame);
+}
+
+function collision(obj, bus) {
+  return (
+    obj.x < bus.x + bus.width &&
+    obj.x + 40 > bus.x &&
+    obj.y < bus.y + bus.height &&
+    obj.y + 40 > bus.y
+  );
+}
+
+function spawnStuff() {
+  if (Math.random() < 0.5) {
+    coins.push({ x: lanes[Math.floor(Math.random() * 3)], y: -40 });
+  } else {
+    obstacles.push({ x: lanes[Math.floor(Math.random() * 3)], y: -40 });
+  }
+}
+
+setInterval(spawnStuff, 1000);
+
+document.getElementById("startBtn").onclick = function () {
+  document.getElementById("startScreen").style.display = "none";
+  updateGame();
+};
+
+document.getElementById("restartBtn").onclick = function () {
+  location.reload();
+};
+
+document.getElementById("leftBtn").onclick = function () {
+  if (bus.lane > 0) {
+    bus.lane--;
+    bus.x = lanes[bus.lane];
+  }
+};
+
+document.getElementById("rightBtn").onclick = function () {
+  if (bus.lane < 2) {
+    bus.lane++;
+    bus.x = lanes[bus.lane];
+  }
+};
+
+document.getElementById("jumpBtn").onclick = function () {
+  if (!bus.jumping && bus.jumpY === 0) {
+    bus.jumping = true;
+  }
+};
+
+document.addEventListener("keydown", e => {
+  if (e.key === "ArrowLeft") document.getElementById("leftBtn").click();
+  if (e.key === "ArrowRight") document.getElementById("rightBtn").click();
+  if (e.key === "ArrowUp") document.getElementById("jumpBtn").click();
+});
+
+function endGame() {
+  document.getElementById("gameOverScreen").style.display = "flex";
+  document.getElementById("finalScore").textContent = "امتیاز نهایی: " + score;
+}
+</script>
+</body>
+</html>
