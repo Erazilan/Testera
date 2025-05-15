@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Bus Snake Game</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="manifest" href="manifest.json" />
+    <style>
+        body {
+            background-color: #111;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+        canvas {
+            background-color: #222;
+            border: 2px solid #555;
+        }
+        .controls {
+            margin-top: 20px;
+            display: grid;
+            grid-template-columns: 60px 60px 60px;
+            grid-template-rows: 60px 60px;
+            gap: 10px;
+        }
+        .btn {
+            background-color: #333;
+            color: white;
+            border: none;
+            font-size: 24px;
+            border-radius: 10px;
+            user-select: none;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="game" width="400" height="400"></canvas>
+    <div class="controls">
+        <div></div>
+        <button class="btn" onclick="setDirection('up')">↑</button>
+        <div></div>
+        <button class="btn" onclick="setDirection('left')">←</button>
+        <button class="btn" onclick="setDirection('down')">↓</button>
+        <button class="btn" onclick="setDirection('right')">→</button>
+    </div>
+    <script>
+        const canvas = document.getElementById('game');
+        const ctx = canvas.getContext('2d');
+
+        const gridSize = 20;
+        const tileCount = canvas.width / gridSize;
+        let bus = [{ x: 10, y: 10 }];
+        let velocity = { x: 0, y: 0 };
+        let passenger = { x: 5, y: 5 };
+
+        function drawRect(x, y, color) {
+            ctx.fillStyle = color;
+            ctx.fillRect(x * gridSize, y * gridSize, gridSize - 2, gridSize - 2);
+        }
+
+        function gameLoop() {
+            const head = { x: bus[0].x + velocity.x, y: bus[0].y + velocity.y };
+
+            if (
+                head.x < 0 ||
+                head.x >= tileCount ||
+                head.y < 0 ||
+                head.y >= tileCount ||
+                bus.some(segment => segment.x === head.x && segment.y === head.y)
+            ) {
+                alert("Game Over! Refresh to play again.");
+                document.location.reload();
+                return;
+            }
+
+            bus.unshift(head);
+
+            if (head.x === passenger.x && head.y === passenger.y) {
+                passenger = {
+                    x: Math.floor(Math.random() * tileCount),
+                    y: Math.floor(Math.random() * tileCount),
+                };
+            } else {
+                bus.pop();
+            }
+
+            ctx.fillStyle = "#222";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            drawRect(passenger.x, passenger.y, "yellow");
+
+            for (let i = 0; i < bus.length; i++) {
+                drawRect(bus[i].x, bus[i].y, i === 0 ? "blue" : "lightblue");
+            }
+        }
+
+        function setDirection(dir) {
+            switch (dir) {
+                case "up":
+                    if (velocity.y === 0) velocity = { x: 0, y: -1 };
+                    break;
+                case "down":
+                    if (velocity.y === 0) velocity = { x: 0, y: 1 };
+                    break;
+                case "left":
+                    if (velocity.x === 0) velocity = { x: -1, y: 0 };
+                    break;
+                case "right":
+                    if (velocity.x === 0) velocity = { x: 1, y: 0 };
+                    break;
+            }
+        }
+
+        window.addEventListener("keydown", e => {
+            switch (e.key) {
+                case "ArrowUp":
+                    if (velocity.y === 0) velocity = { x: 0, y: -1 };
+                    break;
+                case "ArrowDown":
+                    if (velocity.y === 0) velocity = { x: 0, y: 1 };
+                    break;
+                case "ArrowLeft":
+                    if (velocity.x === 0) velocity = { x: -1, y: 0 };
+                    break;
+                case "ArrowRight":
+                    if (velocity.x === 0) velocity = { x: 1, y: 0 };
+                    break;
+            }
+        });
+
+        setInterval(gameLoop, 150);
+
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js');
+        }
+    </script>
+</body>
+</html>
